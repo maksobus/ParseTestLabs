@@ -129,7 +129,7 @@ def osm(coordinates):
 
 def main():
     #print(get_csrf_token())
-    get_tests_by_loc(get_csrf_token(), 38)
+    #get_tests_by_loc(get_csrf_token(), 38)
     get_address()
 
 
