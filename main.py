@@ -1,3 +1,10 @@
+import os
+
+
+def temp_folder():
+    os.makedirs('tmp_txt', exist_ok=True)
+
+
 def main():
     import synevo
     import newdiagnostics
@@ -7,8 +14,9 @@ def main():
     newdiagnostics.load_address_to_sql()
     newdiagnostics.get_tests()
 
+
 if __name__ == '__main__':
-    main()
+    temp_folder()
+    #main()
 
-
-#http://jsonviewer.stack.hu/
+# http://jsonviewer.stack.hu/
