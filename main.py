@@ -17,6 +17,6 @@ def main():
 
 if __name__ == '__main__':
     temp_folder()
-    #main()
+    main()
 
 # http://jsonviewer.stack.hu/
