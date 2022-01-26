@@ -52,7 +52,7 @@ def get_tests_by_loc(csrf, location=152):
     print('Loading data to tmp_txt/tests_by_loc_' + str(location) + '.txt: Start')
     r = s.post('https://www.synevo.ua/api/test/tests-by-loc', headers=headers, data=data)
     if r.status_code == 200:
-        with open('tmp_txt/tests_by_loc_' + str(location) + '.txt', 'w') as file:
+        with open('tmp_txt/tests_by_loc_' + str(location) + '.txt', 'w', encoding='UTF-8') as file:
             file.write(r.text)
         print('Loading data to tmp_txt/tests_by_loc_' + str(location) + '.txt: Done')
     else:

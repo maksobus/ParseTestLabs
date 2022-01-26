@@ -61,7 +61,7 @@ def get_tests():
                 }
     r = s.get('https://newdiagnostics.ua/ua/vracham/analizyi-i-czenyi', headers=headers)
     if r.status_code == 200:
-        with open('tmp_txt/tests_by_newdiagnostics.txt', 'w') as file:
+        with open('tmp_txt/tests_by_newdiagnostics.txt', 'w', encoding='UTF-8') as file:
             file.write(r.text)
         print('Loading data to tmp_txt/tests_by_newdiagnostics.txt: Done')
     else:
@@ -73,7 +73,7 @@ def get_tests():
     parsing_date = '{today}';'''.format(today=date.today())
     conn.execute(sqlstr)
     conn.commit()
-    f = open('tmp_txt/tests_by_newdiagnostics.txt', 'r')
+    f = open('tmp_txt/tests_by_newdiagnostics.txt', 'r', encoding='UTF-8')
     soup = BeautifulSoup(f.read(), 'html.parser')
     main_group = soup.find("div", class_="list-sp")
     main_group_test = main_group.find_all("div", class_="item")
@@ -165,7 +165,7 @@ def get_address():
 
 def load_address_to_sql():
     print('Loading address newdiagnostics to DB: Start')
-    f = open('tmp_txt/newdiagnostics_getLoc.txt', 'r')
+    f = open('tmp_txt/newdiagnostics_getLoc.txt', 'r', encoding='UTF-8')
     data = json.loads(f.read())
     if len(data["data"]) < 1:
         print('\nEmpty data in newdiagnostics_getLoc.txt')

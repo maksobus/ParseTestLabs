@@ -21,18 +21,18 @@ except ImportError:
     sys.exit()
 
 HEADERS = {'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-               'accept-encoding': 'gzip, deflate, br',
-               'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-               'referer': 'https://esculab.com/',
-               'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"',
-               'sec-ch-ua-mobile': '?0',
-               'sec-ch-ua-platform': '"Windows"',
-               'sec-fetch-dest': 'empty',
-               'sec-fetch-mode': 'cors',
-               'sec-fetch-site': 'same-origin',
-               'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                             'Chrome/96.0.4664.110 Safari/537.36'
-               }
+           'accept-encoding': 'gzip, deflate, br',
+           'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+           'referer': 'https://esculab.com/',
+           'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"',
+           'sec-ch-ua-mobile': '?0',
+           'sec-ch-ua-platform': '"Windows"',
+           'sec-fetch-dest': 'empty',
+           'sec-fetch-mode': 'cors',
+           'sec-fetch-site': 'same-origin',
+           'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                         'Chrome/96.0.4664.110 Safari/537.36'
+           }
 
 s = requests.Session()
 
@@ -50,7 +50,7 @@ def get_address():
 
 def load_address_to_sql():
     print('Loading address esculab to DB: Start')
-    f = open('tmp_txt/esculab_getLoc.txt', 'r')
+    f = open('tmp_txt/esculab_getLoc.txt', 'r', encoding='UTF-8')
     data = json.loads(f.read())
     if len(data[0]) < 1:
         print('\nEmpty data in esculab_getLoc.txt')
@@ -96,7 +96,7 @@ def get_cityes():
         print('Error get page https://esculab.com/api/customers/getRegions')
         sys.exit()
     print('Loading city esculab to DB: Start')
-    f = open('tmp_txt/esculab_getRegions.txt', 'r')
+    f = open('tmp_txt/esculab_getRegions.txt', 'r', encoding='UTF-8')
     data = json.loads(f.read())
     if len(data[0]) < 1:
         print('\nEmpty data in esculab_getRegions.txt')
@@ -119,22 +119,35 @@ def get_cityes():
     print('Loading city esculab to DB: Done')
 
 
-def get_tests_by_loc(location=3204):
-    data = {"idreg": location}
-    print('Loading data to tmp_txt/getPriceByRegionLocal_' + str(location) + '.txt: Start')
-    r = s.post('https://esculab.com/api/customers/getPriceByRegionLocal/ua', headers=HEADERS, data=data)
-    print(r.status_code)
+def get_tests_by_loc(location=4400):
+    data = {"idreg": str(location)}
+    headers = {
+        'Host': 'esculab.com',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/96.0.4664.110 Safari/537.36',
+        'accept': 'application/json,text/plain,*/*',
+        'accept-encoding': 'gzip, deflate, br',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Content-Type': 'application/json;charset=utf-8',
+        'Content-Length': '16',
+        'Origin': 'https://esculab.com',
+        'Connection': 'keep-alive',
+        'Referer': 'https://esculab.com/analysis'
+    }
+    print('Loading data to tmp_txt/esculab_getPriceByRegionLocal_' + str(location) + '.txt: Start')
+    r = s.post('https://esculab.com/api/customers/getPriceByRegionLocal/ua', headers=headers, json=data)
     if r.status_code == 200:
-        with open('tmp_txt/getPriceByRegionLocal_' + str(location) + '.txt', 'w') as file:
+        with open('tmp_txt/esculab_getPriceByRegionLocal_' + str(location) + '.txt', 'w', encoding='UTF-8') as file:
             file.write(r.text)
-        print('Loading data to tmp_txt/getPriceByRegionLocal_' + str(location) + '.txt: Done')
+        print('Loading data to tmp_txt/esculab_getPriceByRegionLocal_' + str(location) + '.txt: Done')
+        get_test(location)
     else:
         print('Error get page https://esculab.com/api/customers/getPriceByRegionLocal/ua')
 
 
 def check_string(string):
     if string is not None:
-        return string.replace("'", "''")
+        return str(string).replace("'", "''")
 
 
 def osm(coordinates):
@@ -144,12 +157,82 @@ def osm(coordinates):
     return data[0]['display_name']
 
 
+def get_test(idRegion=4400):
+    print('Loading data tests to DB: Start')
+    f = open('tmp_txt/esculab_getPriceByRegionLocal_' + str(idRegion) + '.txt', 'r', encoding='UTF-8')
+    data = json.loads(f.read())
+    if len(data[0]) < 1:
+        print('\nEmpty data in esculab_getPriceByRegionLocal_' + str(idRegion) + '.txt')
+        sys.exit()
+    conn = sqlite3.connect('testlabs.db')
+    sqlstr = '''DELETE FROM tests_esculab WHERE
+    parsing_date = '{today}' and idReg = '{idReg}';'''.format(today=date.today(),idReg=idRegion)
+    conn.execute(sqlstr)
+    conn.commit()
+
+    for main_group in data:
+        for child in main_group["childAnalyzes"]:
+            # print(str(main_group["superGroupName"]) +
+            #       "--" + str(main_group["name"]) +
+            #       "--" + str(child["code"]) +
+            #       "--" + str(child["name"]) +
+            #       "--" + str(child["price"]) +
+            #       "--" + str(child["discount"]) +
+            #       "--" + str(child["duration_day"]) +
+            #       "--" + str(child["duration_min"]) +
+            #       "--" + str(child["notSale"]) +
+            #       "--" + str(child["action"])
+            #       )
+
+            sqlstr = '''INSERT INTO tests_esculab (idReg,
+            test_category,
+            test_super_category,
+            test_code,
+            test_name,
+            test_price,
+            test_discount,
+            test_term_day,
+            test_term_min,
+            test_notSale,
+            test_action)
+                    VALUES ('{idReg}',
+            '{test_category}',
+            '{test_super_category}',
+            '{test_code}',
+            '{test_name}',
+            '{test_price}',
+            '{test_discount}',
+            '{test_term_day}',
+            '{test_term_min}',
+            '{test_notSale}',
+            '{test_action}');'''.format(
+                idReg=idRegion,
+                test_category=check_string(main_group["name"]),
+                test_super_category=check_string(main_group["superGroupName"]),
+            test_code=check_string(child["code"]),
+            test_name=check_string(child["name"]),
+            test_price=check_string(child["price"]),
+            test_discount=check_string(child["discount"]),
+            test_term_day=check_string(child["duration_day"]),
+            test_term_min=check_string(child["duration_min"]),
+            test_notSale=check_string(child["notSale"]),
+            test_action=check_string(child["action"])
+            )
+            #print(sqlstr)
+
+            conn.execute(sqlstr)
+            conn.commit()
+    conn.close()
+    print('Loading data tests to DB: Done')
+
+
 def main():
     # get_csrf_token()
     # get_address()
     # load_address_to_sql()
-    #get_cityes()
-    get_tests_by_loc(4400)
+    # get_cityes()
+    get_test(4400)
+    #get_tests_by_loc(4400)
     # get_tests()
 
 
