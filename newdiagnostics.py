@@ -188,7 +188,8 @@ def load_address_to_sql():
     for address in data["data"]:
         gps = address['gps'].split(',')
         resposm = osm(address['gps'])
-        region = resposm.split(',')
+        region_list = resposm.split(',')
+        region = region_list[-3] if 3 < len(region_list) else 'Empty'
         sqlstr = '''INSERT INTO addresses_newdiagnostics ( active, address_ru, address_uk, city_ru, city_uk, osm, 
         region, gps_lon, gps_lat, migx_id ) VALUES ('{active}','{address_ru}','{address_uk}','{city_ru}','{city_uk}',
         '{osm}', '{region}','{gps_lon}','{gps_lat}','{migx}' );'''.format(
@@ -198,7 +199,7 @@ def load_address_to_sql():
             city_ru=address['city_ru'].replace("'", "''"),
             city_uk=address['city_uk'].replace("'", "''"),
             osm=resposm.replace("'", "''"),
-            region=region[-3].replace("'", "''"),
+            region=region.replace("'", "''"),
             gps_lon=gps[0].strip(),
             gps_lat=gps[1].strip(),
             migx=address['MIGX_id']

@@ -17,6 +17,7 @@ def main():
     esculab.get_cityes()
     esculab.get_address()
     esculab.load_address_to_sql()
+    esculab.get_tests_by_loc(3201)
 
 
 if __name__ == '__main__':

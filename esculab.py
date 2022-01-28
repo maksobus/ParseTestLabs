@@ -65,7 +65,8 @@ def load_address_to_sql():
     for address in data:
         gps = str(address['lat']) + ',' + str(address['lon'])
         resposm = osm(gps)
-        region = resposm.split(',')
+        region_list = resposm.split(',')
+        region = region_list[-3] if 3 < len(region_list) else 'Empty'
         sqlstr = '''INSERT INTO addresses_esculab (address_ru, address_uk, city_uk, osm,
         region, gps_lon, gps_lat, id_Punkt ) VALUES ('{address_ru}','{address_uk}', '{city_uk}',
         '{osm}', '{region}', '{gps_lon}','{gps_lat}','{id_Punkt}' );'''.format(
@@ -74,7 +75,7 @@ def load_address_to_sql():
             address_uk=check_string(address['address']),
             city_uk=check_string(address['region']),
             osm=check_string(resposm),
-            region=check_string(region[-3]),
+            region=check_string(region),
             gps_lon=address['lon'],
             gps_lat=address['lat'],
             id_Punkt=address['idPunkt']
@@ -229,9 +230,9 @@ def get_test(idRegion=4400):
 def main():
     # get_csrf_token()
     # get_address()
-    # load_address_to_sql()
+     load_address_to_sql()
     # get_cityes()
-    get_test(4400)
+    # get_test(4400)
     #get_tests_by_loc(4400)
     # get_tests()
 

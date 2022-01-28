@@ -102,13 +102,14 @@ def get_address():
             gps_lon = labs_list_item.find("div", class_="labs__list__location").get("data-center-coordinates-lg")
             gps_lat = labs_list_item.find("div", class_="labs__list__location").get("data-center-coordinates-lt")
             resposm = osm(str(gps_lat) + ',' + str(gps_lon))
-            region = resposm.split(',')
+            region_list = resposm.split(',')
+            region = region_list[-3] if 3 < len(region_list) else 'Empty'
             sqlstr = '''INSERT INTO addresses_synevo(gps_lat, gps_lon, region, osm, city_uk, address_uk)
             VALUES('{gps_lat}', '{gps_lon}', '{region}', '{osm}', '{city_uk}', '{address_uk}'
             );'''.format(
                 gps_lat=gps_lat,
                 gps_lon=gps_lon,
-                region=region[-3].replace("'", "''"),
+                region=region.replace("'", "''"),
                 osm=resposm.replace("'", "''"),
                 city_uk=city.replace("'", "''"),
                 address_uk=address.replace("'", "''"))
