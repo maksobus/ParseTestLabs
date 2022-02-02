@@ -32,7 +32,6 @@ except ImportError:
     print('\nsqlite3 module not installed. Run: pip install sqlite3')
     sys.exit()
 
-DATA = {"location_id": 152}
 
 START_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                'Chrome/96.0.4664.110 Safari/537.36'
@@ -44,11 +43,7 @@ s = requests.Session()
 def get_csrf_token():
     r = s.get("https://newdiagnostics.ua/", headers=START_HEADERS)
     if r.status_code == 200:
-        # soup = BeautifulSoup(r.text, 'html.parser')
-        # csrf = soup.findall('meta', name='csrf-token')
-        # csrf = soup.find("meta", attrs={'name': 'csrf-token'})
         return r.headers
-        # print(print(csrf["content"] if csrf else "No meta title given"))
     else:
         print('Error get page https://newdiagnostics.ua/')
 
@@ -87,19 +82,14 @@ def get_tests():
                 test_name = item.find("a").get_text(strip=True)
                 price_term = item.find("p").get_text()
                 price_term_split = price_term.split("грн.")
-                #print(test_category)
-                #print(code)
-                #print(test_name)
-                #print(price_term_split[0].replace("Ціна: ", ""))
-                #print(price_term_split[1].replace("Термін виконання, днів: ", ""))
                 sqlstr = '''INSERT INTO tests_newdiagnostics
                 (test_category, test_code, test_name, price, term)
                 VALUES('{test_category}', '{test_code}', '{test_name}', '{price}', '{term}');'''.format(
-                    test_category=test_category.replace("'", "''"),
-                    test_code=code.replace("'", "''"),
-                    test_name=test_name.replace("'", "''"),
-                    price=price_term_split[0].replace("Ціна: ", "").replace("'", "''"),
-                    term=price_term_split[1].replace("Термін виконання, днів: ", "").replace("'", "''")
+                    test_category=check_string(test_category),
+                    test_code=check_string(code),
+                    test_name=check_string(test_name),
+                    price=check_string(price_term_split[0].replace("Ціна: ", "")),
+                    term=check_string(price_term_split[1].replace("Термін виконання, днів: ", ""))
                 )
                 conn.execute(sqlstr)
                 conn.commit()
@@ -111,20 +101,14 @@ def get_tests():
                 children = div.findChildren()
                 price_term = children[2].get_text()
                 price_term_split = price_term.split("грн.")
-                #print(test_category)
-                #print(code)
-                #print(test_name)
-                #print(price_term)
-                # print(price_term_split[0].replace("Ціна: ", ""))
-                # print(price_term_split[1].replace("Термін виконання, днів:", ""))
                 sqlstr = '''INSERT INTO tests_newdiagnostics
                 (test_category, test_code, test_name, price, term)
                 VALUES('{test_category}', '{test_code}', '{test_name}', '{price}', '{term}');'''.format(
-                    test_category=test_category.replace("'", "''"),
-                    test_code=code.replace("'", "''"),
-                    test_name=test_name.replace("'", "''"),
-                    price=price_term_split[0].replace("Ціна: ", "").replace("'", "''"),
-                    term=price_term_split[1].replace("Термін виконання, днів:", "").replace("'", "''")
+                    test_category=check_string(test_category),
+                    test_code=check_string(code),
+                    test_name=check_string(test_name),
+                    price=check_string(price_term_split[0].replace("Ціна: ", "")),
+                    term=check_string(price_term_split[1].replace("Термін виконання, днів:", ""))
                 )
                 conn.execute(sqlstr)
                 conn.commit()
@@ -149,13 +133,6 @@ def get_address():
                'x-requested-with': 'XMLHttpRequest'}
     r = s.get('https://newdiagnostics.ua/ajax?action=getLoc', headers=headers)
     if r.status_code == 200:
-        # print(r.headers)
-        # decoded_result = r.json()
-        # print(r.encoding)
-        # print(r.content)
-        # r.encoding = 'win-1251'
-        # print(r.text)
-        # print(r.raw.read(100))
         with open('tmp_txt/newdiagnostics_getLoc.txt', 'w', encoding='UTF-8') as file:
             file.write(r.text)
         print('Loading data to tmp_txt/newdiagnostics_getLoc.txt: Done')
@@ -170,14 +147,6 @@ def load_address_to_sql():
     if len(data["data"]) < 1:
         print('\nEmpty data in newdiagnostics_getLoc.txt')
         sys.exit()
-    # print(data["data"][0])
-    # print(data["data"][0]['active'])
-    # print(data["data"][0]['city_ru'])
-    # print(data["data"][0]['city_uk'])
-    # print(data["data"][0]['adress_ru'])
-    # print(data["data"][0]['adress_uk'])
-    # print(data["data"][0]['gps'])
-    # print(data["data"][0]['MIGX_id'])
 
     conn = sqlite3.connect('testlabs.db')
     sqlstr = '''DELETE FROM addresses_newdiagnostics WHERE
@@ -194,12 +163,12 @@ def load_address_to_sql():
         region, gps_lon, gps_lat, migx_id ) VALUES ('{active}','{address_ru}','{address_uk}','{city_ru}','{city_uk}',
         '{osm}', '{region}','{gps_lon}','{gps_lat}','{migx}' );'''.format(
             active=address['active'],
-            address_ru=address['adress_ru'].replace("'", "''"),
-            address_uk=address['adress_uk'].replace("'", "''"),
-            city_ru=address['city_ru'].replace("'", "''"),
-            city_uk=address['city_uk'].replace("'", "''"),
-            osm=resposm.replace("'", "''"),
-            region=region.replace("'", "''"),
+            address_ru=check_string(address['adress_ru']),
+            address_uk=check_string(address['adress_uk']),
+            city_ru=check_string(address['city_ru']),
+            city_uk=check_string(address['city_uk']),
+            osm=check_string(resposm),
+            region=check_string(region),
             gps_lon=gps[0].strip(),
             gps_lat=gps[1].strip(),
             migx=address['MIGX_id']
@@ -209,6 +178,11 @@ def load_address_to_sql():
         conn.commit()
     conn.close()
     print('Loading address newdiagnostics to DB: Done')
+
+
+def check_string(string):
+    if string is not None:
+        return str(string).replace("'", "''")
 
 
 def osm(coordinates):
@@ -227,3 +201,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
