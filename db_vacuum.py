@@ -18,6 +18,7 @@ sql_command = ['DELETE FROM addresses_esculab;',
                'DELETE FROM cityes_synevo;',
                'DELETE FROM tests_esculab;',
                'DELETE FROM tests_newdiagnostics;',
+               'DELETE FROM tests_synevo;',
                'VACUUM;']
 
 for sqlq in sql_command:

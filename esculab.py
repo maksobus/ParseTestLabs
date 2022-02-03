@@ -64,13 +64,8 @@ def load_address_to_sql():
     count_add = 0
     for address in data:
         count_add += 1
-        # print('0')
-        # sys.stdout.write(u"\u001b[1000D")
-        # sys.stdout.flush()
-        # print(str(count_add))
-        sys.stdout.write(str(count_add))
-        sys.stdout.write('-')
-        sys.stdout.flush()
+        load_perc = round((count_add/len(data))*100)
+        mess_perc(load_perc)
         gps = str(address['lat']) + ',' + str(address['lon'])
         resposm = osm(gps)
         region_list = resposm.split(',')
@@ -180,8 +175,12 @@ def get_test(idregion):
     parsing_date = '{today}' and idReg = '{idReg}';'''.format(today=date.today(), idReg=idregion)
     conn.execute(sqlstr)
     conn.commit()
-
+    count_add = 0
+    data_len = len(data)
     for main_group in data:
+        count_add += 1
+        load_perc = round((count_add / data_len) * 100)
+        mess_perc(load_perc)
         for child in main_group["childAnalyzes"]:
             sqlstr = '''INSERT INTO tests_esculab (idReg,
             test_category,
@@ -226,6 +225,15 @@ def get_test(idregion):
 def check_string(string):
     if string is not None:
         return str(string).replace("'", "''")
+
+
+def mess_perc(perc):
+    sys.stdout.write(u"\u001b[1000D")
+    if perc < 100:
+        sys.stdout.write(f"{perc}%")
+    else:
+        sys.stdout.write(f"{perc}%\r")
+    sys.stdout.flush()
 
 
 def osm(coordinates):
