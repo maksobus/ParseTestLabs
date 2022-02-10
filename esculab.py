@@ -62,9 +62,10 @@ def load_address_to_sql():
     conn.execute(sqlstr)
     conn.commit()
     count_add = 0
+    count_all = len(data)
     for address in data:
         count_add += 1
-        load_perc = round((count_add/len(data))*100)
+        load_perc = round((count_add/count_all)*100)
         mess_perc(load_perc)
         gps = str(address['lat']) + ',' + str(address['lon'])
         resposm = osm(gps)
@@ -228,12 +229,14 @@ def check_string(string):
 
 
 def mess_perc(perc):
-    sys.stdout.write(u"\u001b[1000D")
+    sys.stdout.write('\r')
+    sys.stdout.flush()
     if perc < 100:
         sys.stdout.write(f"{perc}%")
+        sys.stdout.flush()
     else:
-        sys.stdout.write(f"{perc}%\r")
-    sys.stdout.flush()
+        sys.stdout.write(f"{perc}%\n")
+        sys.stdout.flush()
 
 
 def osm(coordinates):

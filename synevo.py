@@ -89,8 +89,12 @@ def get_test(citycode):
     parsing_date = '{today}' and citycode = '{citycode}';'''.format(today=date.today(), citycode=citycode)
     conn.execute(sqlstr)
     conn.commit()
-
+    count_add = 0
+    data_len = len(data['json'])
     for key in data['json']:
+        count_add += 1
+        load_perc = round((count_add / data_len) * 100)
+        mess_perc(load_perc)
         for iter_group in data['json'][key]:
             sqlstr = '''INSERT INTO tests_synevo (
             citycode,
@@ -164,8 +168,12 @@ def get_address():
                 parsing_date = '{today}';'''.format(today=date.today())
         conn.execute(sqlstr)
         conn.commit()
+        count_add = 0
 
         for labs_list_item in labs_list:
+            count_add += 1
+            load_perc = round((count_add / len(labs_list)) * 100)
+            mess_perc(load_perc)
             city = labs_list_item.find("span", class_="labs__list__city").get_text(strip=True)
             address = labs_list_item.find("span", class_="labs__list__address").get_text(strip=True)
             gps_lon = labs_list_item.find("div", class_="labs__list__location").get("data-center-coordinates-lg")
@@ -193,6 +201,17 @@ def get_address():
 def check_string(string):
     if string is not None:
         return str(string).replace("'", "''")
+
+
+def mess_perc(perc):
+    sys.stdout.write('\r')
+    sys.stdout.flush()
+    if perc < 100:
+        sys.stdout.write(f"{perc}%")
+        sys.stdout.flush()
+    else:
+        sys.stdout.write(f"{perc}%\n")
+        sys.stdout.flush()
 
 
 def osm(coordinates):
