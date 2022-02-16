@@ -1,6 +1,7 @@
 import sys
 import json
 from datetime import date
+import userdef as udf
 
 try:
     import requests
@@ -66,20 +67,20 @@ def load_address_to_sql():
     for address in data:
         count_add += 1
         load_perc = round((count_add/count_all)*100)
-        mess_perc(load_perc)
+        udf.mess_perc(load_perc)
         gps = str(address['lat']) + ',' + str(address['lon'])
-        resposm = osm(gps)
+        resposm = udf.osm(gps)
         region_list = resposm.split(',')
         region = region_list[-3] if 3 < len(region_list) else 'Empty'
         sqlstr = '''INSERT INTO addresses_esculab (address_ru, address_uk, city_uk, osm,
         region, gps_lon, gps_lat, id_Punkt ) VALUES ('{address_ru}','{address_uk}', '{city_uk}',
         '{osm}', '{region}', '{gps_lon}','{gps_lat}','{id_Punkt}' );'''.format(
 
-            address_ru=check_string(address['addressRu']),
-            address_uk=check_string(address['address']),
-            city_uk=check_string(address['region']),
-            osm=check_string(resposm),
-            region=check_string(region),
+            address_ru=udf.check_string(address['addressRu']),
+            address_uk=udf.check_string(address['address']),
+            city_uk=udf.check_string(address['region']),
+            osm=udf.check_string(resposm),
+            region=udf.check_string(region),
             gps_lon=address['lon'],
             gps_lat=address['lat'],
             id_Punkt=address['idPunkt']
@@ -114,8 +115,8 @@ def get_cityes():
     for city in data:
         sqlstr = '''INSERT INTO cityes_esculab (city, city_ru, idReg) 
                 VALUES ('{city}','{city_ru}','{idReg}' );'''.format(
-            city=check_string(city['name']),
-            city_ru=check_string(city['nameRu']),
+            city=udf.check_string(city['name']),
+            city_ru=udf.check_string(city['nameRu']),
             idReg=city['idReg']
         )
         conn.execute(sqlstr)
@@ -181,7 +182,7 @@ def get_test(idregion):
     for main_group in data:
         count_add += 1
         load_perc = round((count_add / data_len) * 100)
-        mess_perc(load_perc)
+        udf.mess_perc(load_perc)
         for child in main_group["childAnalyzes"]:
             sqlstr = '''INSERT INTO tests_esculab (idReg,
             test_category,
@@ -206,16 +207,16 @@ def get_test(idregion):
             '{test_notSale}',
             '{test_action}');'''.format(
                 idReg=idregion,
-                test_category=check_string(main_group["name"]),
-                test_super_category=check_string(main_group["superGroupName"]),
-                test_code=check_string(child["code"]),
-                test_name=check_string(child["name"]),
-                test_price=check_string(child["price"]),
-                test_discount=check_string(child["discount"]),
-                test_term_day=check_string(child["duration_day"]),
-                test_term_min=check_string(child["duration_min"]),
-                test_notSale=check_string(child["notSale"]),
-                test_action=check_string(child["action"])
+                test_category=udf.check_string(main_group["name"]),
+                test_super_category=udf.check_string(main_group["superGroupName"]),
+                test_code=udf.check_string(child["code"]),
+                test_name=udf.check_string(child["name"]),
+                test_price=udf.check_string(child["price"]),
+                test_discount=udf.check_string(child["discount"]),
+                test_term_day=udf.check_string(child["duration_day"]),
+                test_term_min=udf.check_string(child["duration_min"]),
+                test_notSale=udf.check_string(child["notSale"]),
+                test_action=udf.check_string(child["action"])
             )
             conn.execute(sqlstr)
             conn.commit()
@@ -223,37 +224,9 @@ def get_test(idregion):
     print(f'Loading data tests region {idregion} to DB: Done')
 
 
-def check_string(string):
-    if string is not None:
-        return str(string).replace("'", "''")
-
-
-def mess_perc(perc):
-    sys.stdout.write('\r')
-    sys.stdout.flush()
-    if perc < 100:
-        sys.stdout.write(f"{perc}%")
-        sys.stdout.flush()
-    else:
-        sys.stdout.write(f"{perc}%\n")
-        sys.stdout.flush()
-
-
-def osm(coordinates):
-    overpass_url = "https://nominatim.openstreetmap.org/search?q={gps}]&format=json".format(gps=coordinates)
-    response = requests.get(overpass_url)
-    data = response.json()
-    return data[0]['display_name']
-
-
 def main():
-    get_address()
-    load_address_to_sql()
-    get_cityes()
-    get_tests_all_loc()
+    pass
 
 
 if __name__ == '__main__':
     main()
-
-

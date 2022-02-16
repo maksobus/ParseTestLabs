@@ -1,6 +1,7 @@
 import sys
 from datetime import date
 import json
+import userdef as udf
 
 try:
     import requests
@@ -94,7 +95,7 @@ def get_test(citycode):
     for key in data['json']:
         count_add += 1
         load_perc = round((count_add / data_len) * 100)
-        mess_perc(load_perc)
+        udf.mess_perc(load_perc)
         for iter_group in data['json'][key]:
             sqlstr = '''INSERT INTO tests_synevo (
             citycode,
@@ -121,8 +122,8 @@ def get_test(citycode):
                 allow_buy=iter_group['allow_buy'],
                 test_category_id=key,
                 test_code=iter_group['code'],
-                test_name_ua=check_string(iter_group['name_ua']),
-                test_name_ru=check_string(iter_group['name_ru']),
+                test_name_ua=udf.check_string(iter_group['name_ua']),
+                test_name_ru=udf.check_string(iter_group['name_ru']),
                 price=iter_group['price'],
                 term=iter_group['term']
             )
@@ -151,8 +152,8 @@ def get_address():
             sqlstr = '''INSERT INTO cityes_synevo(citycode,city,region)
             VALUES('{citycode}','{city}','{region}');'''.format(
                 citycode=option['value'],
-                city=check_string(option.text),
-                region=check_string(option['data-region'])
+                city=udf.check_string(option.text),
+                region=udf.check_string(option['data-region'])
             )
             conn.execute(sqlstr)
             conn.commit()
@@ -173,12 +174,12 @@ def get_address():
         for labs_list_item in labs_list:
             count_add += 1
             load_perc = round((count_add / len(labs_list)) * 100)
-            mess_perc(load_perc)
+            udf.mess_perc(load_perc)
             city = labs_list_item.find("span", class_="labs__list__city").get_text(strip=True)
             address = labs_list_item.find("span", class_="labs__list__address").get_text(strip=True)
             gps_lon = labs_list_item.find("div", class_="labs__list__location").get("data-center-coordinates-lg")
             gps_lat = labs_list_item.find("div", class_="labs__list__location").get("data-center-coordinates-lt")
-            resposm = osm(str(gps_lat) + ',' + str(gps_lon))
+            resposm = udf.osm(str(gps_lat) + ',' + str(gps_lon))
             region_list = resposm.split(',')
             region = region_list[-3] if 3 < len(region_list) else 'Empty'
             sqlstr = '''INSERT INTO addresses_synevo(gps_lat, gps_lon, region, osm, city_uk, address_uk)
@@ -186,10 +187,10 @@ def get_address():
             );'''.format(
                 gps_lat=gps_lat,
                 gps_lon=gps_lon,
-                region=check_string(region),
-                osm=check_string(resposm),
-                city_uk=check_string(city),
-                address_uk=check_string(address))
+                region=udf.check_string(region),
+                osm=udf.check_string(resposm),
+                city_uk=udf.check_string(city),
+                address_uk=udf.check_string(address))
             conn.execute(sqlstr)
             conn.commit()
         conn.close()
@@ -198,37 +199,9 @@ def get_address():
         print('Error get page https://www.synevo.ua/ua/centers')
 
 
-def check_string(string):
-    if string is not None:
-        return str(string).replace("'", "''")
-
-
-def mess_perc(perc):
-    sys.stdout.write('\r')
-    sys.stdout.flush()
-    if perc < 100:
-        sys.stdout.write(f"{perc}%")
-        sys.stdout.flush()
-    else:
-        sys.stdout.write(f"{perc}%\n")
-        sys.stdout.flush()
-
-
-def osm(coordinates):
-    overpass_url = "https://nominatim.openstreetmap.org/search?q={gps}]&format=json".format(gps=coordinates)
-    response = requests.get(overpass_url)
-    data = response.json()
-    return data[0]['display_name']
-
-
 def main():
-    # print(get_csrf_token())
-    # get_tests_by_loc(get_csrf_token(), 38)
-    get_address()
-    get_tests_all_loc()
-    #get_test(38)
+    pass
 
 
 if __name__ == '__main__':
     main()
-

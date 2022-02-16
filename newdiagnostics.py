@@ -1,6 +1,7 @@
 import sys
 import json
 from datetime import date
+import userdef as udf
 
 try:
     import brotli
@@ -32,7 +33,6 @@ except ImportError:
     print('\nsqlite3 module not installed. Run: pip install sqlite3')
     sys.exit()
 
-
 START_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                'Chrome/96.0.4664.110 Safari/537.36'
                  }
@@ -51,9 +51,9 @@ def get_csrf_token():
 def get_tests():
     print('Loading data to tmp_txt/tests_by_newdiagnostics.txt: Start')
     headers = {
-               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                             'Chrome/96.0.4664.110 Safari/537.36'
-                }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/96.0.4664.110 Safari/537.36'
+    }
     r = s.get('https://newdiagnostics.ua/ua/vracham/analizyi-i-czenyi', headers=headers)
     if r.status_code == 200:
         with open('tmp_txt/tests_by_newdiagnostics.txt', 'w', encoding='UTF-8') as file:
@@ -85,11 +85,11 @@ def get_tests():
                 sqlstr = '''INSERT INTO tests_newdiagnostics
                 (test_category, test_code, test_name, price, term)
                 VALUES('{test_category}', '{test_code}', '{test_name}', '{price}', '{term}');'''.format(
-                    test_category=check_string(test_category),
-                    test_code=check_string(code),
-                    test_name=check_string(test_name),
-                    price=check_string(price_term_split[0].replace("Ціна: ", "")),
-                    term=check_string(price_term_split[1].replace("Термін виконання, днів: ", ""))
+                    test_category=udf.check_string(test_category),
+                    test_code=udf.check_string(code),
+                    test_name=udf.check_string(test_name),
+                    price=udf.check_string(price_term_split[0].replace("Ціна: ", "")),
+                    term=udf.check_string(price_term_split[1].replace("Термін виконання, днів: ", ""))
                 )
                 conn.execute(sqlstr)
                 conn.commit()
@@ -104,11 +104,11 @@ def get_tests():
                 sqlstr = '''INSERT INTO tests_newdiagnostics
                 (test_category, test_code, test_name, price, term)
                 VALUES('{test_category}', '{test_code}', '{test_name}', '{price}', '{term}');'''.format(
-                    test_category=check_string(test_category),
-                    test_code=check_string(code),
-                    test_name=check_string(test_name),
-                    price=check_string(price_term_split[0].replace("Ціна: ", "")),
-                    term=check_string(price_term_split[1].replace("Термін виконання, днів:", ""))
+                    test_category=udf.check_string(test_category),
+                    test_code=udf.check_string(code),
+                    test_name=udf.check_string(test_name),
+                    price=udf.check_string(price_term_split[0].replace("Ціна: ", "")),
+                    term=udf.check_string(price_term_split[1].replace("Термін виконання, днів:", ""))
                 )
                 conn.execute(sqlstr)
                 conn.commit()
@@ -156,19 +156,19 @@ def load_address_to_sql():
 
     for address in data["data"]:
         gps = address['gps'].split(',')
-        resposm = osm(address['gps'])
+        resposm = udf.osm(address['gps'])
         region_list = resposm.split(',')
         region = region_list[-3] if 3 < len(region_list) else 'Empty'
         sqlstr = '''INSERT INTO addresses_newdiagnostics ( active, address_ru, address_uk, city_ru, city_uk, osm, 
         region, gps_lon, gps_lat, migx_id ) VALUES ('{active}','{address_ru}','{address_uk}','{city_ru}','{city_uk}',
         '{osm}', '{region}','{gps_lon}','{gps_lat}','{migx}' );'''.format(
             active=address['active'],
-            address_ru=check_string(address['adress_ru']),
-            address_uk=check_string(address['adress_uk']),
-            city_ru=check_string(address['city_ru']),
-            city_uk=check_string(address['city_uk']),
-            osm=check_string(resposm),
-            region=check_string(region),
+            address_ru=udf.check_string(address['adress_ru']),
+            address_uk=udf.check_string(address['adress_uk']),
+            city_ru=udf.check_string(address['city_ru']),
+            city_uk=udf.check_string(address['city_uk']),
+            osm=udf.check_string(resposm),
+            region=udf.check_string(region),
             gps_lon=gps[0].strip(),
             gps_lat=gps[1].strip(),
             migx=address['MIGX_id']
@@ -180,25 +180,9 @@ def load_address_to_sql():
     print('Loading address newdiagnostics to DB: Done')
 
 
-def check_string(string):
-    if string is not None:
-        return str(string).replace("'", "''")
-
-
-def osm(coordinates):
-    overpass_url = "https://nominatim.openstreetmap.org/search?q={gps}]&format=json".format(gps=coordinates)
-    response = requests.get(overpass_url)
-    data = response.json()
-    return data[0]['display_name']
-
-
 def main():
-    # get_csrf_token()
-    # get_address()
-    # load_address_to_sql()
-    get_tests()
+    pass
 
 
 if __name__ == '__main__':
     main()
-
